@@ -1,5 +1,6 @@
 package org.example.databasefinalprojectapi.movies.repository
 
+import com.querydsl.jpa.impl.JPAQuery
 import com.querydsl.jpa.impl.JPAQueryFactory
 import org.example.databasefinalprojectapi.movies.entity.Movie
 import org.example.databasefinalprojectapi.movies.entity.QMovie
@@ -12,27 +13,6 @@ import org.springframework.stereotype.Repository
 class CustomMovieRepository(
     private val queryFactory: JPAQueryFactory
 ) {
-    private fun getFindAllByConditionCount(
-        title: String?,
-        director: String?,
-        startDate: Int?,
-        endDate: Int?
-    ): Long {
-        val movie = QMovie.movie
-        val query = queryFactory.selectFrom(movie)
-
-        if (title != null) query.where(movie.title.contains(title))
-        if (director != null) query.where(movie.director.contains(director))
-        if (startDate != null && endDate != null) query.where(
-            movie.year.between(
-                startDate,
-                endDate
-            )
-        )
-
-        return query.fetch().count().toLong()
-    }
-
     fun findAllByCondition(
         title: String?,
         director: String?,
@@ -41,6 +21,22 @@ class CustomMovieRepository(
         sort: MovieSort?,
         pageRequest: PageRequest
     ): PageImpl<Movie> {
+        val query = getFindAllByConditionQuery(title, director, startDate, endDate, sort)
+
+        val count = query.fetch().size.toLong()
+        val contents = query.offset(pageRequest.offset)
+            .limit(pageRequest.pageSize.toLong())
+            .fetch()
+        return PageImpl(contents, pageRequest, count)
+    }
+
+    private fun getFindAllByConditionQuery(
+        title: String?,
+        director: String?,
+        startDate: Int?,
+        endDate: Int?,
+        sort: MovieSort?
+    ): JPAQuery<Movie> {
         val movie = QMovie.movie
         val query = queryFactory.selectFrom(movie)
 
@@ -60,10 +56,6 @@ class CustomMovieRepository(
             }
         }
 
-        val count = getFindAllByConditionCount(title, director, startDate, endDate)
-        val contents = query.offset(pageRequest.offset)
-            .limit(pageRequest.pageSize.toLong())
-            .fetch()
-        return PageImpl(contents, pageRequest, count)
+        return query
     }
 }
