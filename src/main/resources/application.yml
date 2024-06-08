@@ -1,0 +1,7 @@
+spring:
+  application:
+    name: DatabaseFinalProject-API
+  datasource:
+    url: jdbc:mysql://localhost:3333/final_project
+    username: root
+    password: 1111
