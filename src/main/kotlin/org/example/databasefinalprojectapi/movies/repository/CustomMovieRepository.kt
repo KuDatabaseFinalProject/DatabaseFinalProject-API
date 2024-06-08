@@ -46,11 +46,11 @@ class CustomMovieRepository(
 
         if (title != null) query.where(movie.title.contains(title))
         if (director != null) query.where(movie.director.contains(director))
-        if (startDate != null && endDate != null) query.where(
-            movie.year.between(
-                startDate,
-                endDate
-            )
+        if (startDate != null) query.where(
+            movie.year.goe(startDate)
+        )
+        if (endDate != null) query.where(
+            movie.year.loe(endDate)
         )
 
         if (sort != null) {
