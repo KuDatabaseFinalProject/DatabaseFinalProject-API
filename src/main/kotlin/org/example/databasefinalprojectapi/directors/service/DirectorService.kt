@@ -15,21 +15,13 @@ class DirectorService(
 
         val directors = directorRepository.findAllByNameContains(directorName)
         val directorIds = directors.map { it.id }
+        val directorsMap = directors.associateBy { it.id }
         val movieDirectors =
             movieDirectorRepository.findAllByMovieDirectorIdDirectorIdIn(directorIds)
-        val directorMap = mutableMapOf<Long, MutableList<Director>>()
-
-        movieDirectors.forEach {
-            val director =
-                directors.find { director -> director.id == it.movieDirectorId.directorId }
-            if (director != null) {
-                if (directorMap[it.movieDirectorId.movieId] == null) {
-                    directorMap[it.movieDirectorId.movieId] = mutableListOf(director)
-                } else {
-                    directorMap[it.movieDirectorId.movieId]?.add(director)
-                }
-            }
-        }
+        val directorMap = movieDirectors
+            .groupBy(
+                { it.movieDirectorId.directorId },
+                { directorsMap[it.movieDirectorId.directorId]!! })
 
         return directorMap
     }
