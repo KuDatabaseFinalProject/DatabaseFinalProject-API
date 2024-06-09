@@ -14,8 +14,6 @@ class Movie(
     val year: Int?,
     val country: String?,
     val mType: String?,
-    val genre: String?,
     val status: String?,
-    val director: String?,
     val company: String?,
 )

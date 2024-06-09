@@ -5,7 +5,6 @@ import com.querydsl.jpa.impl.JPAQueryFactory
 import org.example.databasefinalprojectapi.movies.entity.Movie
 import org.example.databasefinalprojectapi.movies.entity.QMovie
 import org.example.databasefinalprojectapi.movies.enum.MovieSort
-import org.springframework.data.domain.PageImpl
 import org.springframework.data.domain.PageRequest
 import org.springframework.stereotype.Repository
 
@@ -14,25 +13,34 @@ class CustomMovieRepository(
     private val queryFactory: JPAQueryFactory
 ) {
     fun findAllByCondition(
+        movieIds: List<Long>,
         title: String?,
-        director: String?,
         startDate: Int?,
         endDate: Int?,
         sort: MovieSort?,
         pageRequest: PageRequest
-    ): PageImpl<Movie> {
-        val query = getFindAllByConditionQuery(title, director, startDate, endDate, sort)
+    ): MutableList<Movie> {
+        val query = getFindAllByConditionQuery(movieIds, title, startDate, endDate, sort)
 
-        val count = query.fetch().size.toLong()
-        val contents = query.offset(pageRequest.offset)
+        return query.offset(pageRequest.offset)
             .limit(pageRequest.pageSize.toLong())
             .fetch()
-        return PageImpl(contents, pageRequest, count)
+    }
+
+    fun countAllByCondition(
+        movieIds: List<Long>,
+        title: String?,
+        startDate: Int?,
+        endDate: Int?
+    ): Long {
+        val query = getFindAllByConditionQuery(movieIds, title, startDate, endDate, null)
+
+        return query.fetch().size.toLong()
     }
 
     private fun getFindAllByConditionQuery(
+        movieIds: List<Long>,
         title: String?,
-        director: String?,
         startDate: Int?,
         endDate: Int?,
         sort: MovieSort?
@@ -40,15 +48,10 @@ class CustomMovieRepository(
         val movie = QMovie.movie
         val query = queryFactory.selectFrom(movie)
 
+        if (movieIds.isNotEmpty()) query.where(movie.id.`in`(movieIds))
         if (title != null) query.where(movie.title.contains(title))
-        if (director != null) query.where(movie.director.contains(director))
-        if (startDate != null) query.where(
-            movie.year.goe(startDate)
-        )
-        if (endDate != null) query.where(
-            movie.year.loe(endDate)
-        )
-
+        if (startDate != null) query.where(movie.year.goe(startDate))
+        if (endDate != null) query.where(movie.year.loe(endDate))
         if (sort != null) {
             when (sort) {
                 MovieSort.YEAR -> query.orderBy(movie.year.asc())
