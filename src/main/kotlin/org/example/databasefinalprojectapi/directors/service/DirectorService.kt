@@ -20,7 +20,7 @@ class DirectorService(
             movieDirectorRepository.findAllByMovieDirectorIdDirectorIdIn(directorIds)
         val directorMap = movieDirectors
             .groupBy(
-                { it.movieDirectorId.directorId },
+                { it.movieDirectorId.movieId },
                 { directorsMap[it.movieDirectorId.directorId]!! })
 
         return directorMap
